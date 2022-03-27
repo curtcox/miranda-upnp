@@ -298,7 +298,7 @@ class upnp:
             verbose = self.VERBOSE
 
         #Is the SSDP packet a notification, a reply, or neither?
-        for text,messageType in knownHeaders.iteritems():
+        for text,messageType in knownHeaders.items():
             if data.upper().startswith(text):
                 break
             else:
@@ -326,7 +326,7 @@ class upnp:
             #Check if we've seen this host before; add to the list of hosts if:
             #    1. This is a new host
             #    2. We've already seen this host, but the uniq hosts setting is disabled
-            for hostID,hostInfo in self.ENUM_HOSTS.iteritems():
+            for hostID,hostInfo in self.ENUM_HOSTS.items():
                 if hostInfo['name'] == host:
                     hostFound = True
                     if self.UNIQ:
@@ -411,7 +411,7 @@ class upnp:
             port = 80
 
         #Create a string containing all of the SOAP action's arguments and values
-        for arg,(val,dt) in actionArguments.iteritems():
+        for arg,(val,dt) in actionArguments.items():
             argList += '<%s>%s</%s>' % (arg,val,arg)
 
         #Create the SOAP request
@@ -433,7 +433,7 @@ class upnp:
                 }
 
         #Generate the final payload
-        for head,value in headers.iteritems():
+        for head,value in headers.items():
             soapRequest += '%s: %s\r\n' % (head,value)
         soapRequest += '\r\n%s' % soapBody
 
@@ -496,21 +496,21 @@ class upnp:
             fp.write('UPNP XML File:     %s\n\n' % hostInfo['xmlFile'])
 
             fp.write('\nDevice information:\n')
-            for deviceName,deviceStruct in hostInfo['deviceList'].iteritems():
+            for deviceName,deviceStruct in hostInfo['deviceList'].items():
                 fp.write('    Device Name: %s\n' % deviceName)
-                for serviceName,serviceStruct in deviceStruct['services'].iteritems():
+                for serviceName,serviceStruct in deviceStruct['services'].items():
                     fp.write('        Service Name: %s\n' % serviceName)
                     for key in serviceKeys:
                         fp.write('            %s: %s\n' % (key,serviceStruct[key]))
                     fp.write('            ServiceActions:\n')
-                    for actionName,actionStruct in serviceStruct['actions'].iteritems():
+                    for actionName,actionStruct in serviceStruct['actions'].items():
                         fp.write('                %s\n' % actionName)
-                        for argName,argStruct in actionStruct['arguments'].iteritems():
+                        for argName,argStruct in actionStruct['arguments'].items():
                             fp.write('                    %s \n' % argName)
-                            for key,val in argStruct.iteritems():
+                            for key,val in argStruct.items():
                                 if key == 'relatedStateVariable':
                                     fp.write('                        %s:\n' % val)
-                                    for k,v in serviceStruct['serviceStateVariables'][val].iteritems():
+                                    for k,v in serviceStruct['serviceStateVariables'][val].items():
                                         fp.write('                            %s: %s\n' % (k,v))
                                 else:
                                     fp.write('                        %s: %s\n' % (key,val))
@@ -790,7 +790,7 @@ class upnp:
         try:
             structPtr = {}
             topLevelKeys = {}
-            for key,val in struct.iteritems():
+            for key,val in struct.items():
                 structPtr[str(key)] = val
                 topLevelKeys[str(key)] = None
 
@@ -800,23 +800,23 @@ class upnp:
                 self.completer.commands[hostCommand][subcmd] = structPtr
 
             #Update the indexOnlyList
-            for cmd,data in indexOnlyList.iteritems():
+            for cmd,data in indexOnlyList.items():
                 for subcmd in data:
                     self.completer.commands[cmd][subcmd] = topLevelKeys
 
             #This is for updating the sendCommand key
             structPtr = {}
-            for hostIndex,hostData in struct.iteritems():
+            for hostIndex,hostData in struct.items():
                 host = str(hostIndex)
                 structPtr[host] = {}
                 if hostData.has_key('deviceList'):
-                    for device,deviceData in hostData['deviceList'].iteritems():
+                    for device,deviceData in hostData['deviceList'].items():
                         structPtr[host][device] = {}
                         if deviceData.has_key('services'):
-                            for service,serviceData in deviceData['services'].iteritems():
+                            for service,serviceData in deviceData['services'].items():
                                 structPtr[host][device][service] = {}
                                 if serviceData.has_key('actions'):
-                                    for action,actionData in serviceData['actions'].iteritems():
+                                    for action,actionData in serviceData['actions'].items():
                                         structPtr[host][device][service][action] = None
             self.completer.commands[hostCommand][sendCommand] = structPtr
         except Exception as e:
@@ -852,7 +852,7 @@ def msearch(argc,argv,hp):
     request =     "M-SEARCH * HTTP/1.1\r\n"\
             "HOST:%s:%d\r\n"\
             "ST:%s\r\n" % (hp.ip,hp.port,st)
-    for header,value in hp.msearchHeaders.iteritems():
+    for header,value in hp.msearchHeaders.items():
             request += header + ':' + value + "\r\n"
     request += "\r\n"
 
@@ -913,7 +913,7 @@ def head(argc,argv,hp):
         action = argv[1]
         #Show current headers
         if action == 'show':
-            for header,value in hp.msearchHeaders.iteritems():
+            for header,value in hp.msearchHeaders.items():
                 print(header,':',value)
             return
         #Delete the specified header
@@ -1030,7 +1030,7 @@ def host(argc,argv,hp):
             if len(hp.ENUM_HOSTS) == 0:
                 print("No known hosts - try running the 'msearch' or 'pcap' commands")
                 return
-            for index,hostInfo in hp.ENUM_HOSTS.iteritems():
+            for index,hostInfo in hp.ENUM_HOSTS.items():
                 print("    [%d] %s" % (index,hostInfo['name']))
             return
         elif action == 'details':
@@ -1065,9 +1065,9 @@ def host(argc,argv,hp):
 
                 print('Host:',hostInfo['name'])
                 print('XML File:',hostInfo['xmlFile'])
-                for deviceName,deviceData in hostInfo['deviceList'].iteritems():
+                for deviceName,deviceData in hostInfo['deviceList'].items():
                     print(deviceName)
-                    for k,v in deviceData.iteritems():
+                    for k,v in deviceData.items():
                         try:
                             v.has_key(False)
                         except:
@@ -1085,7 +1085,7 @@ def host(argc,argv,hp):
                     pass
                 output = output[arg]
             try:
-                for k,v in output.iteritems():
+                for k,v in output.items():
                     try:
                         v.has_key(False)
                         dataStructs.append(k)
@@ -1179,7 +1179,7 @@ def host(argc,argv,hp):
                     print("Are you sure you've specified the correct action?")
                     return False
 
-                for argName,argVals in actionArgs.iteritems():
+                for argName,argVals in actionArgs.items():
                     actionStateVar = argVals['relatedStateVariable']
                     stateVar = hostInfo['deviceList'][deviceName]['services'][serviceName]['serviceStateVariables'][actionStateVar]
 
@@ -1553,7 +1553,7 @@ def showHelp(command):
     try:
         print(helpInfo[command]['longListing'] % command)
     except:
-        for command,cmdHelp in helpInfo.iteritems():
+        for command,cmdHelp in helpInfo.items():
             print("%s        %s" % (command,cmdHelp['quickView']))
 
 #Display usage
@@ -1692,65 +1692,65 @@ def getFileInput(hp):
 def main(argc,argv):
     #Table of valid commands - all primary commands must have an associated function
     appCommands = {
-            'help' : {
-                'help' : None
-                },
-            'quit' : {
-                'help' : None
-                },
-            'exit' : {
-                'help' : None
-                },
-            'save' : {
-                'data' : None,
-                'info' : None,
-                'help' : None
-                },
-            'load' : {
-                'help' : None
-                },
-            'set' : {
-                'uniq' : None,
-                'socket' : None,
-                'show' : None,
-                'iface' : None,
-                'debug' : None,
-                'version' : None,
-                'verbose' : None,
-                'timeout' : None,
-                'max' : None,
-                'help' : None
-                },
-            'head' : {
-                'set' : None,
-                'show' : None,
-                'del' : None,
-                'help': None
-                },
-            'host' : {
-                'list' : None,
-                'info' : None,
-                'get'  : None,
-                'details' : None,
-                'send' : None,
-                'summary' : None,
-                'help' : None
-                },
-            'pcap' : {
-                'help' : None
-                },
-            'msearch' : {
-                'device' : None,
-                'service' : None,
-                'help' : None
-                },
-            'log'  : {
-                'help' : None
-                },
-            'debug': {
-                'command' : None,
-                'help'    : None
-                }
+        'help' : {
+            'help' : None
+            },
+        'quit' : {
+            'help' : None
+            },
+        'exit' : {
+            'help' : None
+            },
+        'save' : {
+            'data' : None,
+            'info' : None,
+            'help' : None
+            },
+        'load' : {
+            'help' : None
+            },
+        'set' : {
+            'uniq' : None,
+            'socket' : None,
+            'show' : None,
+            'iface' : None,
+            'debug' : None,
+            'version' : None,
+            'verbose' : None,
+            'timeout' : None,
+            'max' : None,
+            'help' : None
+            },
+        'head' : {
+            'set' : None,
+            'show' : None,
+            'del' : None,
+            'help': None
+            },
+        'host' : {
+            'list' : None,
+            'info' : None,
+            'get'  : None,
+            'details' : None,
+            'send' : None,
+            'summary' : None,
+            'help' : None
+            },
+        'pcap' : {
+            'help' : None
+            },
+        'msearch' : {
+            'device' : None,
+            'service' : None,
+            'help' : None
+            },
+        'log'  : {
+            'help' : None
+            },
+        'debug': {
+            'command' : None,
+            'help'    : None
+            }
     }
 
     #The load command should auto complete on the contents of the current directory
