@@ -95,7 +95,7 @@ def pcap(argc,argv,hp):
                 count += 1
 
         except Exception as e:
-            print("\nPassive mode halted...")
+            print("\nPassive mode halted...",e)
             break
 
 #Manipulate M-SEARCH header values
@@ -111,7 +111,7 @@ def head(argc,argv,hp):
         elif action == 'del':
             if argc == 3:
                 header = argv[2]
-                if hp.msearchHeaders.has_key(header):
+                if header in hp.msearchHeaders:
                     del hp.msearchHeaders[header]
                     print('%s removed from header list' % header)
                     return
@@ -260,7 +260,7 @@ def host(argc,argv,hp):
                     print(deviceName)
                     for k,v in deviceData.items():
                         try:
-                            v.has_key(False)
+                            False in v
                         except:
                             print("    %s: %s" % (k,v))
                 print('')
@@ -278,7 +278,7 @@ def host(argc,argv,hp):
             try:
                 for k,v in output.items():
                     try:
-                        v.has_key(False)
+                        False in v
                         dataStructs.append(k)
                     except:
                         print(k,':',v)
@@ -378,12 +378,12 @@ def host(argc,argv,hp):
                         print("Required argument:")
                         print("    Argument Name: ",argName)
                         print("    Data Type:     ",stateVar['dataType'])
-                        if stateVar.has_key('allowedValueList'):
+                        if 'allowedValueList' in stateVar:
                             print("    Allowed Values:",stateVar['allowedValueList'])
-                        if stateVar.has_key('allowedValueRange'):
+                        if 'allowedValueRange' in stateVar:
                             print("    Value Min:     ",stateVar['allowedValueRange'][0])
                             print("    Value Max:     ",stateVar['allowedValueRange'][1])
-                        if stateVar.has_key('defaultValue'):
+                        if 'defaultValue' in stateVar:
                             print("    Default Value: ",stateVar['defaultValue'])
                         prompt = "    Set %s value to: " % argName
                         try:
@@ -979,9 +979,10 @@ def main(argc,argv):
         print('')
         #Parse actions
         try:
-            if appCommands.has_key(action):
+            if action in appCommands:
                 funcPtr = eval(action)
-        except:
+        except Exception as e:
+            print("Problem evaluating", e)
             funcPtr = False
             action = False
 
