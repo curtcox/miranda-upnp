@@ -243,8 +243,8 @@ class upnp:
         page = False
         upnpType = None
         knownHeaders = {
-                'NOTIFY' : 'notification',
-                'HTTP/1.1 200 OK' : 'reply'
+            'NOTIFY' : 'notification',
+            'HTTP/1.1 200 OK' : 'reply'
         }
 
         #Use the class defaults if these aren't specified
