@@ -10,7 +10,6 @@ from xml.dom import minidom as minidom
 
 from CmdCompleter import CmdCompleter
 
-
 #UPNP class for getting, sending and parsing SSDP/SOAP XML data (among other things...)
 class upnp:
     ip = False
@@ -79,8 +78,8 @@ class upnp:
             # BSD systems also need to set SO_REUSEPORT
             try:
                 self.ssock.setsockopt(SOL_SOCKET,SO_REUSEPORT,1)
-            except:
-                pass
+            except Exception as e:
+                print("WARNING: setsockopt ", e)
 
             #Only bind to this interface
             if self.IFACE != None:
@@ -434,7 +433,6 @@ class upnp:
             sock.close()
             return False
 
-
     #Display all info for a given host
     def showCompleteHostInfo(self,index,fp):
         na = 'N/A'
@@ -766,16 +764,16 @@ class upnp:
             for hostIndex,hostData in struct.items():
                 host = str(hostIndex)
                 structPtr[host] = {}
-                if hostData.has_key('deviceList'):
+                if 'deviceList' in hostData:
                     for device,deviceData in hostData['deviceList'].items():
                         structPtr[host][device] = {}
-                        if deviceData.has_key('services'):
+                        if 'services' in deviceData:
                             for service,serviceData in deviceData['services'].items():
                                 structPtr[host][device][service] = {}
-                                if serviceData.has_key('actions'):
+                                if 'actions' in serviceData:
                                     for action,actionData in serviceData['actions'].items():
                                         structPtr[host][device][service][action] = None
             self.completer.commands[hostCommand][sendCommand] = structPtr
         except Exception as e:
-            print("Error updating command completer structure; some command completion features might not work...")
+            print("Error updating command completer structure; some command completion features might not work...",e)
         return
