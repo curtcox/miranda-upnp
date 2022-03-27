@@ -32,10 +32,10 @@ $ ./miranda.py [OPTIONS]
 
 -s <struct file>    Load previous host data from struct file
 -l <log file>       Log user-supplied commands to log file
--i <interface>		Specify the name of the interface to use (Linux only, requires root)
+-i <interface>      Specify the name of the interface to use (Linux only, requires root)
 -b <batch file>     Process commands from a file
 -u                  Disable show-uniq-hosts-only option
--v			        Enable verbose mode
+-v                  Enable verbose mode
 -d                  Enable debug mode
 -h                  Show command line help
 
