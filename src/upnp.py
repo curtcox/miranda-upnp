@@ -234,7 +234,7 @@ class upnp:
         return None
 
     #Parses SSDP notify and reply packets, and populates the ENUM_HOSTS dict
-    def parseSSDPInfo(self,data,showUniq,verbose):
+    def parseSSDPInfo(self,data_bytes,showUniq,verbose):
         hostFound = False
         foundLocation = False
         messageType = False
@@ -254,6 +254,7 @@ class upnp:
             verbose = self.VERBOSE
 
         #Is the SSDP packet a notification, a reply, or neither?
+        data = data_bytes.decode("utf-8")
         for text,messageType in knownHeaders.items():
             if data.upper().startswith(text):
                 break
