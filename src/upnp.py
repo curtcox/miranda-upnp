@@ -109,12 +109,12 @@ class upnp:
         self.ssock.close()
 
     #Send network data
-    def send(self,data,socket):
+    def send(self,data_string,socket):
         #By default, use the client socket that's part of this class
         if socket == False:
             socket = self.csock
         try:
-            socket.sendto(data,(self.ip,self.port))
+            socket.sendto(str.encode(data_string),(self.ip,self.port))
             return True
         except Exception as e:
             print("SendTo method failed for %s:%d : %s" % (self.ip, self.port, e))
