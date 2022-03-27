@@ -10,9 +10,7 @@ import os
 import re
 import platform
 import xml.dom.minidom as minidom
-import IN
 import urllib
-import urllib2
 import readline
 import time
 import pickle
@@ -131,8 +129,8 @@ class upnp:
             #Only bind to this interface
             if self.IFACE != None:
                 print('\nBinding to interface',self.IFACE,'...\n')
-                self.ssock.setsockopt(SOL_SOCKET,IN.SO_BINDTODEVICE,struct.pack("%ds" % (len(self.IFACE)+1,), self.IFACE))
-                self.csock.setsockopt(SOL_SOCKET,IN.SO_BINDTODEVICE,struct.pack("%ds" % (len(self.IFACE)+1,), self.IFACE))
+                self.ssock.setsockopt(SOL_SOCKET,urllib.SO_BINDTODEVICE,struct.pack("%ds" % (len(self.IFACE)+1,), self.IFACE))
+                self.csock.setsockopt(SOL_SOCKET,urllib.SO_BINDTODEVICE,struct.pack("%ds" % (len(self.IFACE)+1,), self.IFACE))
 
             try:
                 self.ssock.bind(('',self.port))
@@ -375,8 +373,8 @@ class upnp:
 
         try:
             #Use urllib2 for the request, it's awesome
-            req = urllib2.Request(url, None, headers)
-            response = urllib2.urlopen(req)
+            req = urllib.Request(url, None, headers)
+            response = urllib.urlopen(req)
             output = response.read()
             headers = response.info()
             return (headers,output)
@@ -466,17 +464,17 @@ class upnp:
                 print('SOAP request failed with error code:',header.split('\r\n')[0].split(' ',1)[1])
                 errorMsg = self.extractSingleTag(body,'errorDescription')
                 if errorMsg:
-                    print 'SOAP error message:',errorMsg
+                    print('SOAP error message:',errorMsg)
                 return False
             else:
                 return body
-                except Exception as e:
-                        print 'Caught socket exception:',e
-                        sock.close()
-                        return False
-                except KeyboardInterrupt:
-            print ""
-                        sock.close()
+        except Exception as e:
+            print('Caught socket exception:',e)
+            sock.close()
+            return False
+        except KeyboardInterrupt:
+            print("")
+            sock.close()
             return False
 
 
@@ -493,7 +491,7 @@ class upnp:
         try:
             hostInfo = self.ENUM_HOSTS[index]
             if hostInfo['dataComplete'] == False:
-                print "Cannot show all host info because I don't have it all yet. Try running 'host info %d' first...\n" % index
+                print("Cannot show all host info because I don't have it all yet. Try running 'host info %d' first...\n" % index)
             fp.write('Host name:         %s\n' % hostInfo['name'])
             fp.write('UPNP XML File:     %s\n\n' % hostInfo['xmlFile'])
 
@@ -518,7 +516,7 @@ class upnp:
                                     fp.write('                        %s: %s\n' % (key,val))
 
         except Exception as e:
-            print 'Caught exception while showing host info:',e
+            print('Caught exception while showing host info:',e)
 
     #Wrapper function...
     def getHostInfo(self,xmlData,xmlHeaders,index):
@@ -533,7 +531,7 @@ class upnp:
                 self.ENUM_HOSTS[index]['dataComplete'] = True
                 return True
             except Exception as e:
-                print 'Caught exception while getting host info:',e
+                print('Caught exception while getting host info:',e)
         return False
 
     #Parse device info from the retrieved XML file
@@ -606,7 +604,7 @@ class upnp:
                 #Get specific service info about this service
                 self.parseServiceInfo(serviceEntryPointer,index)
         except Exception as e:
-            print 'Caught exception while parsing device service list:',e
+            print('Caught exception while parsing device service list:',e)
 
     #Parse details about each service (arguements, variables, etc)
     def parseServiceInfo(self,service,index):
@@ -637,7 +635,7 @@ class upnp:
         #Get the XML file that describes this service
         (xmlHeaders,xmlData) = self.getXML(xmlFile)
         if not xmlData:
-            print 'Failed to retrieve service descriptor located at:',xmlFile
+            print('Failed to retrieve service descriptor located at:',xmlFile)
             return False
 
         try:
@@ -647,7 +645,7 @@ class upnp:
             try:
                 actionList = xmlRoot.getElementsByTagName(actionList)[0]
             except:
-                print 'Failed to retrieve action list for service %s!' % service['fullName']
+                print('Failed to retrieve action list for service %s!' % service['fullName'])
                 return False
             actions = actionList.getElementsByTagName(actionTag)
             if actions == []:
@@ -659,7 +657,7 @@ class upnp:
                 try:
                     actionName = str(action.getElementsByTagName(nameTag)[0].childNodes[0].data).strip()
                 except:
-                    print 'Failed to obtain service action name (%s)!' % service['fullName']
+                    print('Failed to obtain service action name (%s)!' % service['fullName'])
                     continue
 
                 #Add the action to the ENUM_HOSTS dictonary
@@ -677,7 +675,7 @@ class upnp:
                 arguments = argList.getElementsByTagName(argumentTag)
                 if arguments == []:
                     if self.VERBOSE:
-                        print 'Action',actionName,'has no arguments!'
+                        print('Action',actionName,'has no arguments!')
                     continue
 
                 #Loop through the action's arguments, appending them to the ENUM_HOSTS dictionary
@@ -685,7 +683,7 @@ class upnp:
                     try:
                         argName = str(argument.getElementsByTagName(nameTag)[0].childNodes[0].data)
                     except:
-                        print 'Failed to get argument name for',actionName
+                        print('Failed to get argument name for',actionName)
                         continue
                     service['actions'][actionName]['arguments'][argName] = {}
 
@@ -694,14 +692,14 @@ class upnp:
                         try:
                             service['actions'][actionName]['arguments'][argName][tag] = str(argument.getElementsByTagName(tag)[0].childNodes[0].data)
                         except:
-                            print 'Failed to find tag %s for argument %s!' % (tag,argName)
+                            print('Failed to find tag %s for argument %s!' % (tag,argName))
                             continue
 
             #Parse all of the state variables for this service
             self.parseServiceStateVars(xmlRoot,service)
 
         except Exception as e:
-            print 'Caught exception while parsing Service info for service %s: %s' % (service['fullName'],str(e))
+            print('Caught exception while parsing Service info for service %s: %s' % (service['fullName'],str(e)))
             return False
 
         return True
@@ -739,7 +737,7 @@ class upnp:
                 try:
                     varName = str(var.getElementsByTagName(nameTag)[0].childNodes[0].data)
                 except:
-                    print 'Failed to get service state variable name for service %s!' % servicePointer['fullName']
+                    print('Failed to get service state variable name for service %s!' % servicePointer['fullName'])
                     continue
 
                 servicePointer['serviceStateVariables'][varName] = {}
@@ -822,7 +820,7 @@ class upnp:
                                         structPtr[host][device][service][action] = None
             self.completer.commands[hostCommand][sendCommand] = structPtr
         except Exception as e:
-            print "Error updating command completer structure; some command completion features might not work..."
+            print("Error updating command completer structure; some command completion features might not work...")
         return
 
 
@@ -858,13 +856,13 @@ def msearch(argc,argv,hp):
             request += header + ':' + value + "\r\n"
     request += "\r\n"
 
-    print "Entering discovery mode for '%s', Ctl+C to stop..." % st
-    print ''
+    print("Entering discovery mode for '%s', Ctl+C to stop..." % st)
+    print('')
 
     #Have to create a new socket since replies will be sent directly to our IP, not the multicast IP
     server = hp.createNewListener(myip,lport)
     if server == False:
-        print 'Failed to bind port %d' % lport
+        print('Failed to bind port %d' % lport)
         return
 
     hp.send(request,server)
@@ -883,13 +881,13 @@ def msearch(argc,argv,hp):
                 count += 1
 
         except Exception as e:
-            print '\nDiscover mode halted...'
+            print('\nDiscover mode halted...')
             break
 
 #Passively listen for UPNP NOTIFY packets
 def pcap(argc,argv,hp):
-    print 'Entering passive mode, Ctl+C to stop...'
-    print ''
+    print('Entering passive mode, Ctl+C to stop...')
+    print('')
 
     count = 0
     start = time.time()
@@ -906,7 +904,7 @@ def pcap(argc,argv,hp):
                 count += 1
 
         except Exception as e:
-            print "\nPassive mode halted..."
+            print("\nPassive mode halted...")
             break
 
 #Manipulate M-SEARCH header values
@@ -916,7 +914,7 @@ def head(argc,argv,hp):
         #Show current headers
         if action == 'show':
             for header,value in hp.msearchHeaders.iteritems():
-                print header,':',value
+                print(header,':',value)
             return
         #Delete the specified header
         elif action == 'del':
@@ -924,10 +922,10 @@ def head(argc,argv,hp):
                 header = argv[2]
                 if hp.msearchHeaders.has_key(header):
                     del hp.msearchHeaders[header]
-                    print '%s removed from header list' % header
+                    print('%s removed from header list' % header)
                     return
                 else:
-                    print '%s is not in the current header list' % header
+                    print('%s is not in the current header list' % header)
                     return
         #Create/set a headers
         elif action == 'set':
@@ -935,7 +933,7 @@ def head(argc,argv,hp):
                 header = argv[2]
                 value = argv[3]
                 hp.msearchHeaders[header] = value
-                print "Added header: '%s:%s" % (header,value)
+                print("Added header: '%s:%s" % (header,value))
                 return
 
     showHelp(argv[0])
@@ -946,31 +944,31 @@ def set(argc,argv,hp):
         action = argv[1]
         if action == 'uniq':
             hp.UNIQ = toggleVal(hp.UNIQ)
-            print "Show unique hosts set to: %s" % hp.UNIQ
+            print("Show unique hosts set to: %s" % hp.UNIQ)
             return
         elif action == 'debug':
             hp.DEBUG = toggleVal(hp.DEBUG)
-            print "Debug mode set to: %s" % hp.DEBUG
+            print("Debug mode set to: %s" % hp.DEBUG)
             return
         elif action == 'verbose':
             hp.VERBOSE = toggleVal(hp.VERBOSE)
-            print "Verbose mode set to: %s" % hp.VERBOSE
+            print("Verbose mode set to: %s" % hp.VERBOSE)
             return
         elif action == 'version':
             if argc == 3:
                 hp.UPNP_VERSION = argv[2]
-                print 'UPNP version set to: %s' % hp.UPNP_VERSION
+                print('UPNP version set to: %s' % hp.UPNP_VERSION)
             else:
                 showHelp(argv[0])
             return
         elif action == 'iface':
             if argc == 3:
                 hp.IFACE = argv[2]
-                print 'Interface set to %s, re-binding sockets...' % hp.IFACE
+                print('Interface set to %s, re-binding sockets...' % hp.IFACE)
                 if hp.initSockets(hp.ip,hp.port,hp.IFACE):
-                    print 'Interface change successful!'
+                    print('Interface change successful!')
                 else:
-                    print 'Failed to bind new interface - are you sure you have root privilages??'
+                    print('Failed to bind new interface - are you sure you have root privilages??')
                     hp.IFACE = None
                 return
         elif action == 'socket':
@@ -982,38 +980,38 @@ def set(argc,argv,hp):
                     hp.port = port
                     hp.cleanup()
                     if hp.initSockets(ip,port,hp.IFACE) == False:
-                        print "Setting new socket %s:%d failed!" % (ip,port)
+                        print("Setting new socket %s:%d failed!" % (ip,port))
                     else:
-                        print "Using new socket: %s:%d" % (ip,port)
+                        print("Using new socket: %s:%d" % (ip,port))
                 except Exception as e:
-                    print 'Caught exception setting new socket:',e
+                    print('Caught exception setting new socket:',e)
                 return
         elif action == 'timeout':
             if argc == 3:
                 try:
                     hp.TIMEOUT = int(argv[2])
                 except Exception as e:
-                    print 'Caught exception setting new timeout value:',e
+                    print('Caught exception setting new timeout value:',e)
                 return
         elif action == 'max':
             if argc == 3:
                 try:
                     hp.MAX_HOSTS = int(argv[2])
                 except Exception as e:
-                    print 'Caught exception setting new max host value:', e
+                    print('Caught exception setting new max host value:', e)
                 return
         elif action == 'show':
-            print 'Multicast IP:          ',hp.ip
-            print 'Multicast port:        ',hp.port
-            print 'Network interface:     ',hp.IFACE
-            print 'Receive timeout:       ',hp.TIMEOUT
-            print 'Host discovery limit:  ',hp.MAX_HOSTS
-            print 'Number of known hosts: ',len(hp.ENUM_HOSTS)
-            print 'UPNP version:          ',hp.UPNP_VERSION
-            print 'Debug mode:            ',hp.DEBUG
-            print 'Verbose mode:          ',hp.VERBOSE
-            print 'Show only unique hosts:',hp.UNIQ
-            print 'Using log file:        ',hp.LOG_FILE
+            print('Multicast IP:          ',hp.ip)
+            print('Multicast port:        ',hp.port)
+            print('Network interface:     ',hp.IFACE)
+            print('Receive timeout:       ',hp.TIMEOUT)
+            print('Host discovery limit:  ',hp.MAX_HOSTS)
+            print('Number of known hosts: ',len(hp.ENUM_HOSTS))
+            print('UPNP version:          ',hp.UPNP_VERSION)
+            print('Debug mode:            ',hp.DEBUG)
+            print('Verbose mode:          ',hp.VERBOSE)
+            print('Show only unique hosts:',hp.UNIQ)
+            print('Using log file:        ',hp.LOG_FILE)
             return
 
     showHelp(argv[0])
@@ -1030,10 +1028,10 @@ def host(argc,argv,hp):
         action = argv[1]
         if action == 'list':
             if len(hp.ENUM_HOSTS) == 0:
-                print "No known hosts - try running the 'msearch' or 'pcap' commands"
+                print("No known hosts - try running the 'msearch' or 'pcap' commands")
                 return
             for index,hostInfo in hp.ENUM_HOSTS.iteritems():
-                print "    [%d] %s" % (index,hostInfo['name'])
+                print("    [%d] %s" % (index,hostInfo['name']))
             return
         elif action == 'details':
             if argc == 3:
@@ -1041,7 +1039,7 @@ def host(argc,argv,hp):
                     index = int(argv[2])
                     hostInfo = hp.ENUM_HOSTS[index]
                 except Exception as e:
-                    print indexError
+                    print(indexError)
                     return
 
                 try:
@@ -1049,9 +1047,9 @@ def host(argc,argv,hp):
                     if hostInfo['dataComplete'] == True:
                         hp.showCompleteHostInfo(index,False)
                     else:
-                        print "Can't show host info because I don't have it. Please run 'host get %d'" % index
+                        print("Can't show host info because I don't have it. Please run 'host get %d'" % index)
                 except KeyboardInterrupt as e:
-                    print ""
+                    print("")
                     pass
                 return
 
@@ -1062,19 +1060,19 @@ def host(argc,argv,hp):
                     index = int(argv[2])
                     hostInfo = hp.ENUM_HOSTS[index]
                 except:
-                    print indexError
+                    print(indexError)
                     return
 
-                print 'Host:',hostInfo['name']
-                print 'XML File:',hostInfo['xmlFile']
+                print('Host:',hostInfo['name'])
+                print('XML File:',hostInfo['xmlFile'])
                 for deviceName,deviceData in hostInfo['deviceList'].iteritems():
-                    print deviceName
+                    print(deviceName)
                     for k,v in deviceData.iteritems():
                         try:
                             v.has_key(False)
                         except:
-                            print "    %s: %s" % (k,v)
-                print ''
+                            print("    %s: %s" % (k,v))
+                print('')
                 return
 
         elif action == 'info':
@@ -1092,13 +1090,13 @@ def host(argc,argv,hp):
                         v.has_key(False)
                         dataStructs.append(k)
                     except:
-                        print k,':',v
+                        print(k,':',v)
                         continue
             except:
-                print output
+                print(output)
 
             for struct in dataStructs:
-                print struct,': {}'
+                print(struct,': {}')
             return
 
         elif action == 'get':
@@ -1107,33 +1105,33 @@ def host(argc,argv,hp):
                     index = int(argv[2])
                     hostInfo = hp.ENUM_HOSTS[index]
                 except:
-                    print indexError
+                    print(indexError)
                     return
 
                 if hostInfo is not None:
                     #If this host data is already complete, just display it
                     if hostInfo['dataComplete'] == True:
-                        print 'Data for this host has already been enumerated!'
+                        print('Data for this host has already been enumerated!')
                         return
 
                     try:
                         #Get extended device and service information
                         if hostInfo != False:
-                            print "Requesting device and service info for %s (this could take a few seconds)..." % hostInfo['name']
-                            print ''
+                            print("Requesting device and service info for %s (this could take a few seconds)..." % hostInfo['name'])
+                            print('')
                             if hostInfo['dataComplete'] == False:
                                 (xmlHeaders,xmlData) = hp.getXML(hostInfo['xmlFile'])
                                 if xmlData == False:
-                                    print 'Failed to request host XML file:',hostInfo['xmlFile']
+                                    print('Failed to request host XML file:',hostInfo['xmlFile'])
                                     return
                                 if hp.getHostInfo(xmlData,xmlHeaders,index) == False:
-                                    print "Failed to get device/service info for %s..." % hostInfo['name']
+                                    print("Failed to get device/service info for %s..." % hostInfo['name'])
                                     return
-                            print 'Host data enumeration complete!'
+                            print('Host data enumeration complete!')
                             hp.updateCmdCompleter(hp.ENUM_HOSTS)
                             return
                     except KeyboardInterrupt as e:
-                        print ""
+                        print("")
                         return
 
         elif action == 'send':
@@ -1149,7 +1147,7 @@ def host(argc,argv,hp):
                     index = int(argv[2])
                     hostInfo = hp.ENUM_HOSTS[index]
                 except:
-                    print indexError
+                    print(indexError)
                     return
                 deviceName = argv[3]
                 serviceName = argv[4]
@@ -1168,8 +1166,8 @@ def host(argc,argv,hp):
                         controlURL += '/'
                     controlURL += controlURL2
                 except Exception as e:
-                    print 'Caught exception:',e
-                    print "Are you sure you've run 'host get %d' and specified the correct service name?" % index
+                    print('Caught exception:',e)
+                    print("Are you sure you've run 'host get %d' and specified the correct service name?" % index)
                     return False
 
                 #Get action info
@@ -1177,8 +1175,8 @@ def host(argc,argv,hp):
                     actionArgs = hostInfo['deviceList'][deviceName]['services'][serviceName]['actions'][actionName]['arguments']
                     fullServiceName = hostInfo['deviceList'][deviceName]['services'][serviceName]['fullName']
                 except Exception as e:
-                    print 'Caught exception:',e
-                    print "Are you sure you've specified the correct action?"
+                    print('Caught exception:',e)
+                    print("Are you sure you've specified the correct action?")
                     return False
 
                 for argName,argVals in actionArgs.iteritems():
@@ -1186,22 +1184,22 @@ def host(argc,argv,hp):
                     stateVar = hostInfo['deviceList'][deviceName]['services'][serviceName]['serviceStateVariables'][actionStateVar]
 
                     if argVals['direction'].lower() == 'in':
-                        print "Required argument:"
-                        print "    Argument Name: ",argName
-                        print "    Data Type:     ",stateVar['dataType']
+                        print("Required argument:")
+                        print("    Argument Name: ",argName)
+                        print("    Data Type:     ",stateVar['dataType'])
                         if stateVar.has_key('allowedValueList'):
-                            print "    Allowed Values:",stateVar['allowedValueList']
+                            print("    Allowed Values:",stateVar['allowedValueList'])
                         if stateVar.has_key('allowedValueRange'):
-                            print "    Value Min:     ",stateVar['allowedValueRange'][0]
-                            print "    Value Max:     ",stateVar['allowedValueRange'][1]
+                            print("    Value Min:     ",stateVar['allowedValueRange'][0])
+                            print("    Value Max:     ",stateVar['allowedValueRange'][1])
                         if stateVar.has_key('defaultValue'):
-                            print "    Default Value: ",stateVar['defaultValue']
+                            print("    Default Value: ",stateVar['defaultValue'])
                         prompt = "    Set %s value to: " % argName
                         try:
                             #Get user input for the argument value
                             (argc,argv) = getUserInput(hp,prompt)
                             if argv == None:
-                                print 'Stopping send request...'
+                                print('Stopping send request...')
                                 return
                             uInput = ''
 
@@ -1217,9 +1215,9 @@ def host(argc,argv,hp):
 
                             sendArgs[argName] = (uInput.strip(),stateVar['dataType'])
                         except KeyboardInterrupt:
-                            print ""
+                            print("")
                             return
-                        print ''
+                        print('')
                     else:
                         retTags.append((argName,stateVar['dataType']))
 
@@ -1240,7 +1238,7 @@ def host(argc,argv,hp):
                         tagValue = hp.extractSingleTag(soapResponse,tag)
                         if dataType == 'bin.base64' and tagValue != None:
                             tagValue = base64.decodestring(tagValue)
-                        print tag,':',tagValue
+                        print(tag,':',tagValue)
             return
 
 
@@ -1271,7 +1269,7 @@ def save(argc,argv,hp):
                 try:
                     index = int(argv[2])
                 except Exception as e:
-                    print 'Host index is not a number!'
+                    print('Host index is not a number!')
                     showHelp(argv[0])
                     return
             else:
@@ -1288,24 +1286,24 @@ def save(argc,argv,hp):
 
     fileName = suffix % (saveType,uniqName)
     if os.path.exists(fileName):
-        print "File '%s' already exists! Please try again..." % fileName
+        print("File '%s' already exists! Please try again..." % fileName)
         return
     if saveType == 'struct':
         try:
             fp = open(fileName,'w')
             pickle.dump(hp.ENUM_HOSTS,fp)
             fp.close()
-            print "Host data saved to '%s'" % fileName
+            print("Host data saved to '%s'" % fileName)
         except Exception as e:
-            print 'Caught exception saving host data:',e
+            print('Caught exception saving host data:',e)
     elif saveType == 'info':
         try:
             fp = open(fileName,'w')
             hp.showCompleteHostInfo(index,fp)
             fp.close()
-            print "Host info for '%s' saved to '%s'" % (hp.ENUM_HOSTS[index]['name'],fileName)
+            print("Host info for '%s' saved to '%s'" % (hp.ENUM_HOSTS[index]['name'],fileName))
         except Exception as e:
-            print 'Failed to save host info:',e
+            print('Failed to save host info:',e)
             return
     else:
         showHelp(argv[0])
@@ -1323,12 +1321,12 @@ def load(argc,argv,hp):
             hp.ENUM_HOSTS = pickle.load(fp)
             fp.close()
             hp.updateCmdCompleter(hp.ENUM_HOSTS)
-            print 'Host data restored:'
-            print ''
+            print('Host data restored:')
+            print('')
             host(2,['host','list'],hp)
             return
         except Exception as e:
-            print 'Caught exception while restoring host data:',e
+            print('Caught exception while restoring host data:',e)
 
     showHelp(argv[0])
 
@@ -1339,7 +1337,7 @@ def log(argc,argv,hp):
         try:
             fp = open(logFile,'a')
         except Exception as e:
-            print 'Failed to open %s for logging: %s' % (logFile,e)
+            print('Failed to open %s for logging: %s' % (logFile,e))
             return
         try:
             hp.LOG_FILE = fp
@@ -1349,10 +1347,10 @@ def log(argc,argv,hp):
             theTime = "%d-%d-%d, %d:%d:%d" % (ts[0],ts[1],ts[2],ts[3],ts[4],ts[5])
             hp.LOG_FILE.write("\n### Logging started at: %s ###\n" % theTime)
         except Exception as e:
-            print "Cannot write to file '%s': %s" % (logFile,e)
+            print("Cannot write to file '%s': %s" % (logFile,e))
             hp.LOG_FILE = False
             return
-        print "Commands will be logged to: '%s'" % logFile
+        print("Commands will be logged to: '%s'" % logFile)
         return
     showHelp(argv[0])
 
@@ -1364,7 +1362,7 @@ def help(argc,argv,hp):
 def debug(argc,argv,hp):
     command = ''
     if hp.DEBUG == False:
-        print 'Debug is disabled! To enable, try the set command...'
+        print('Debug is disabled! To enable, try the set command...')
         return
     if argc == 1:
         showHelp(argv[0])
@@ -1372,7 +1370,7 @@ def debug(argc,argv,hp):
         for cmd in argv[1:]:
             command += cmd + ' '
         command = command.strip()
-        print eval(command)
+        print(eval(command))
     return
 #Quit!
 def exit(argc,argv,hp):
@@ -1383,8 +1381,8 @@ def quit(argc,argv,hp):
     if argc == 2 and argv[1] == 'help':
         showHelp(argv[0])
         return
-    print 'Bye!'
-    print ''
+    print('Bye!')
+    print('')
     hp.cleanup()
     sys.exit(0)
 
@@ -1553,14 +1551,14 @@ def showHelp(command):
 
 
     try:
-        print helpInfo[command]['longListing'] % command
+        print(helpInfo[command]['longListing'] % command)
     except:
         for command,cmdHelp in helpInfo.iteritems():
-            print "%s        %s" % (command,cmdHelp['quickView'])
+            print("%s        %s" % (command,cmdHelp['quickView']))
 
 #Display usage
 def usage():
-    print '''
+    print('''
 Command line usage: %s [OPTIONS]
 
     -s <struct file>    Load previous host data from struct file
@@ -1571,7 +1569,7 @@ Command line usage: %s [OPTIONS]
     -d            Enable debug mode
     -v            Enable verbose mode
     -h             Show help
-''' % sys.argv[0]
+''' % sys.argv[0])
     sys.exit(1)
 
 #Check command line options
@@ -1579,29 +1577,29 @@ def parseCliOpts(argc,argv,hp):
     try:
         opts,args = getopt.getopt(argv[1:],'s:l:i:b:udvh')
     except getopt.GetoptError as e:
-        print 'Usage Error:',e
+        print('Usage Error:',e)
         usage()
     else:
         for (opt,arg) in opts:
             if opt == '-s':
-                print ''
+                print('')
                 load(2,['load',arg],hp)
-                print ''
+                print('')
             elif opt == '-l':
-                print ''
+                print('')
                 log(2,['log',arg],hp)
-                print ''
+                print('')
             elif opt == '-u':
                 hp.UNIQ = toggleVal(hp.UNIQ)
             elif opt == '-d':
                 hp.DEBUG = toggleVal(hp.DEBUG)
-                print 'Debug mode enabled!'
+                print('Debug mode enabled!')
             elif opt == '-v':
                 hp.VERBOSE = toggleVal(hp.VERBOSE)
-                print 'Verbose mode enabled!'
+                print('Verbose mode enabled!')
             elif opt == '-b':
                 hp.BATCH_FILE = open(arg, 'r')
-                print "Processing commands from '%s'..." % arg
+                print("Processing commands from '%s'..." % arg)
             elif opt == '-h':
                 usage()
             elif opt == '-i':
@@ -1626,18 +1624,18 @@ def parseCliOpts(argc,argv,hp):
                     else:
                         networkInterfaces.append('Run ipconfig to get a list of available network interfaces!')
                 except Exception as e:
-                    print 'Error opening file:',e
-                    print "If you aren't running Linux, this file may not exist!"
+                    print('Error opening file:',e)
+                    print("If you aren't running Linux, this file may not exist!")
 
                 if not found and len(networkInterfaces) > 0:
-                    print "Failed to find interface '%s'; try one of these:\n" % requestedInterface
+                    print("Failed to find interface '%s'; try one of these:\n" % requestedInterface)
                     for iface in networkInterfaces:
-                        print iface
-                    print ''
+                        print(iface)
+                    print('')
                     sys.exit(1)
                 else:
                     if not hp.initSockets(False,False,interfaceName):
-                        print 'Binding to interface %s failed; are you sure you have root privilages??' % interfaceName
+                        print('Binding to interface %s failed; are you sure you have root privilages??' % interfaceName)
 
 #Toggle boolean values
 def toggleVal(val):
@@ -1657,11 +1655,11 @@ def getUserInput(hp,shellPrompt):
         shellPrompt = defaultShellPrompt
 
     try:
-        uInput = raw_input(shellPrompt).strip()
+        uInput = input(shellPrompt).strip()
         argv = uInput.split()
         argc = len(argv)
     except KeyboardInterrupt as e:
-        print '\n'
+        print('\n')
         if shellPrompt == defaultShellPrompt:
             quit(0,[],hp)
         return (0,None)
@@ -1669,7 +1667,7 @@ def getUserInput(hp,shellPrompt):
         try:
             hp.LOG_FILE.write("%s\n" % uInput)
         except:
-            print 'Failed to log data to log file!'
+            print('Failed to log data to log file!')
 
     return (argc,argv)
 
@@ -1756,8 +1754,8 @@ def main(argc,argv):
     }
 
     #The load command should auto complete on the contents of the current directory
-        for file in os.listdir(os.getcwd()):
-                appCommands['load'][file] = None
+    for file in os.listdir(os.getcwd()):
+        appCommands['load'][file] = None
 
     #Initialize upnp class
     hp = upnp(False,False,None,appCommands);
@@ -1787,7 +1785,7 @@ def main(argc,argv):
         action = argv[0]
         funcPtr = False
 
-        print ''
+        print('')
         #Parse actions
         try:
             if appCommands.has_key(action):
@@ -1803,23 +1801,23 @@ def main(argc,argv):
                 try:
                     funcPtr(argc,argv,hp)
                 except KeyboardInterrupt:
-                    print '\nAction interrupted by user...'
-            print ''
+                    print('\nAction interrupted by user...')
+            print('')
             continue
-        print 'Invalid command. Valid commands are:'
-        print ''
+        print('Invalid command. Valid commands are:')
+        print('')
         showHelp(False)
-        print ''
+        print('')
 
 
 if __name__ == "__main__":
     try:
-        print ''
-        print 'Miranda v1.3'
-        print 'The interactive UPnP client'
-        print 'Craig Heffner, http://www.devttys0.com'
-        print ''
+        print('')
+        print('Miranda v1.3')
+        print('The interactive UPnP client')
+        print('Craig Heffner, http://www.devttys0.com')
+        print('')
         main(len(sys.argv),sys.argv)
     except Exception as e:
-        print 'Caught main exception:',e
+        print('Caught main exception:',e)
         sys.exit(1)
